@@ -18,6 +18,7 @@ public class LocalPlayer : MonoBehaviour
     [SerializeField] float moveSpeed;
     [SerializeField] float mouseSensitivity;
     [SerializeField] float maxMouseSensitivity;
+    [SerializeField] bool isWalk = false;
 
     private void Awake()
     {
@@ -43,8 +44,16 @@ public class LocalPlayer : MonoBehaviour
     {
         Vector2 vector = new Vector2(rigid.linearVelocity.x, rigid.linearVelocity.z);
         float Velocity = vector.magnitude;
+        if(isWalk)
+        {
+            animators[0].SetBool("Walk", true);
+        }
+        else
+        {
+            animators[0].SetBool("Walk", false);
+        }
 
-        animators[1].SetFloat("Velocity",Velocity);
+        animators[1].SetFloat("Velocity", Velocity);
         animators[2].SetFloat("Velocity", Velocity);
 
         animators[1].SetFloat("DirX", moveInputVec.x);
@@ -99,12 +108,13 @@ public class LocalPlayer : MonoBehaviour
         if(context.performed)
         {
             moveInputVec = context.ReadValue<Vector2>();
-            
+            isWalk = true;
         }
         else if(context.canceled)
         {
             moveInputVec = new Vector2(0, 0);
             currentSpeed = 0;
+            isWalk = false;
         }
     }
 }
