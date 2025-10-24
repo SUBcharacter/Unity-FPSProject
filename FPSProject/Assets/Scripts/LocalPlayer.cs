@@ -1,16 +1,21 @@
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
 public class LocalPlayer : MonoBehaviour
 {
+    [SerializeField] Transform playerCamera;
     [SerializeField] Rigidbody rigid;
     [SerializeField] Transform vertical;
     [SerializeField] Animator[] animators;
 
     [SerializeField] Vector2 mouseInputVec;
     [SerializeField] Vector2 moveInputVec;
+    [SerializeField] Vector3 moveDir;
 
     [SerializeField] float verticalRotation = 0;
+    [SerializeField] float currentSpeed =0;
+    [SerializeField] float moveSpeed;
     [SerializeField] float mouseSensitivity;
     [SerializeField] float maxMouseSensitivity;
 
@@ -30,7 +35,22 @@ public class LocalPlayer : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        
+        Move();
+        AnimationControler();
+    }
+
+    void AnimationControler()
+    {
+        Vector2 vector = new Vector2(rigid.linearVelocity.x, rigid.linearVelocity.z);
+        float Velocity = vector.magnitude;
+
+        animators[1].SetFloat("Velocity",Velocity);
+        animators[2].SetFloat("Velocity", Velocity);
+
+        animators[1].SetFloat("DirX", moveInputVec.x);
+        animators[1].SetFloat("DirZ", moveInputVec.y);
+        animators[2].SetFloat("DirX", moveInputVec.x);
+        animators[2].SetFloat("DirZ", moveInputVec.y);
     }
 
     void View()
@@ -47,7 +67,25 @@ public class LocalPlayer : MonoBehaviour
 
     void Move()
     {
+        Vector3 cameraForward = playerCamera.forward;
+        Vector3 cameraRight = playerCamera.right;
 
+        cameraForward.y = 0;
+        cameraRight.y = 0;
+        cameraForward.Normalize();
+        cameraRight.Normalize();
+
+        moveDir = cameraRight*moveInputVec.x + cameraForward*moveInputVec.y;
+        if(moveInputVec.magnitude > 0.1f)
+        {
+            currentSpeed += 5f * Time.fixedDeltaTime;
+            currentSpeed = Mathf.Min(currentSpeed, moveSpeed);
+        }
+        
+
+        Vector3 velocity = moveDir * currentSpeed;
+        velocity.y = rigid.linearVelocity.y;
+        rigid.linearVelocity = velocity;
     }
 
     public void OnLook(InputAction.CallbackContext context)
@@ -61,10 +99,12 @@ public class LocalPlayer : MonoBehaviour
         if(context.performed)
         {
             moveInputVec = context.ReadValue<Vector2>();
+            
         }
         else if(context.canceled)
         {
             moveInputVec = new Vector2(0, 0);
+            currentSpeed = 0;
         }
     }
 }
