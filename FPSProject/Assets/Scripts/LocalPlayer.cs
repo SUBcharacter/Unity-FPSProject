@@ -15,10 +15,15 @@ public class LocalPlayer : MonoBehaviour
 
     [SerializeField] float verticalRotation = 0;
     [SerializeField] float currentSpeed =0;
-    [SerializeField] float moveSpeed;
+    [SerializeField] float walkSpeed;
+    [SerializeField] float sprintSpeed;
+    [SerializeField] float jumpPower;
     [SerializeField] float mouseSensitivity;
     [SerializeField] float maxMouseSensitivity;
     [SerializeField] bool isWalk = false;
+    [SerializeField] bool isSprint = false;
+    [SerializeField] bool isReload = false;
+    [SerializeField] bool aiming = false;
 
     private void Awake()
     {
@@ -43,7 +48,7 @@ public class LocalPlayer : MonoBehaviour
     void AnimationControler()
     {
         Vector2 vector = new Vector2(rigid.linearVelocity.x, rigid.linearVelocity.z);
-        float Velocity = vector.magnitude;
+        float Velocity = vector.magnitude/(sprintSpeed-1);
         if(isWalk)
         {
             animators[0].SetBool("Walk", true);
@@ -51,6 +56,33 @@ public class LocalPlayer : MonoBehaviour
         else
         {
             animators[0].SetBool("Walk", false);
+        }
+
+        if(isSprint)
+        {
+            animators[0].SetBool("Run", true);
+        }
+        else
+        {
+            animators[0].SetBool("Run", false);
+        }
+
+        if(aiming)
+        {
+            animators[0].SetBool("Aim", true);
+        }
+        else
+        {
+            animators[0].SetBool("Aim", false);
+        }
+
+        if(isReload)
+        {
+            animators[0].SetBool("Reloading", true);
+        }
+        else
+        {
+            animators[0].SetBool("Reloading", false);
         }
 
         animators[1].SetFloat("Velocity", Velocity);
@@ -74,6 +106,11 @@ public class LocalPlayer : MonoBehaviour
         transform.Rotate(Vector3.up, mouseX);
     }
 
+    public void Reloading()
+    {
+        isReload = !isReload;
+    }
+
     void Move()
     {
         Vector3 cameraForward = playerCamera.forward;
@@ -87,8 +124,36 @@ public class LocalPlayer : MonoBehaviour
         moveDir = cameraRight*moveInputVec.x + cameraForward*moveInputVec.y;
         if(moveInputVec.magnitude > 0.1f)
         {
-            currentSpeed += 5f * Time.fixedDeltaTime;
-            currentSpeed = Mathf.Min(currentSpeed, moveSpeed);
+            
+            if(isSprint && !isReload)
+            {
+                if (aiming)
+                {
+                    currentSpeed += 5f * Time.fixedDeltaTime;
+                    currentSpeed = Mathf.Min(currentSpeed, walkSpeed / 2);
+                }
+                else
+                {
+                    currentSpeed += 10f * Time.fixedDeltaTime;
+                    currentSpeed = Mathf.Min(currentSpeed, sprintSpeed);
+                }
+                
+            }
+            else
+            {
+                if (aiming)
+                {
+                    currentSpeed += 5f * Time.fixedDeltaTime;
+                    currentSpeed = Mathf.Min(currentSpeed, walkSpeed / 2);
+                }
+                else
+                {
+                    currentSpeed += 5f * Time.fixedDeltaTime;
+                    currentSpeed = Mathf.Min(currentSpeed, walkSpeed);
+                }
+                
+            }
+            
         }
         
 
@@ -116,5 +181,52 @@ public class LocalPlayer : MonoBehaviour
             currentSpeed = 0;
             isWalk = false;
         }
+    }
+    
+    public void OnSprint(InputAction.CallbackContext context)
+    {
+        if(context.performed)
+        {
+            isSprint = true;
+        }
+        else if(context.canceled)
+        {
+            isSprint = false;
+        }
+    }
+
+    public void OnFire(InputAction.CallbackContext context)
+    {
+        if(context.performed)
+        {
+            animators[0].SetTrigger("Shoot");                                                       
+        }
+    }
+
+    public void OnZoom(InputAction.CallbackContext context)
+    {
+        if(context.performed)
+        {
+            aiming = true;
+        }
+        else if(context.canceled)
+        {
+            aiming = false;
+        }
+    }
+
+    public void OnReload(InputAction.CallbackContext context)
+    {
+        if (!context.performed)
+            return;
+
+        animators[0].SetTrigger("Reload");
+    }
+
+    public void OnJump(InputAction.CallbackContext context)
+    {
+        if (!context.performed)
+            return;
+        rigid.linearVelocity += new Vector3(0, 1, 0) * jumpPower;
     }
 }
