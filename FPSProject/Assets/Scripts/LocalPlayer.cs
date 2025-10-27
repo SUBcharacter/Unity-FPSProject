@@ -4,6 +4,8 @@ using UnityEngine.InputSystem;
 
 public class LocalPlayer : MonoBehaviour
 {
+    // ¾ÉÀ» ½Ã body YÁÂÇ¥ -0.5
+    [SerializeField] Transform body;
     [SerializeField] Transform playerCamera;
     [SerializeField] Rigidbody rigid;
     [SerializeField] Transform vertical;
@@ -20,16 +22,26 @@ public class LocalPlayer : MonoBehaviour
     [SerializeField] float jumpPower;
     [SerializeField] float mouseSensitivity;
     [SerializeField] float maxMouseSensitivity;
-    [SerializeField] bool isWalk = false;
-    [SerializeField] bool isSprint = false;
-    [SerializeField] bool isReload = false;
-    [SerializeField] bool aiming = false;
+
+    [SerializeField] bool isWalk;
+    [SerializeField] bool isSprint;
+    [SerializeField] bool isReload;
+    [SerializeField] bool aiming;
+    [SerializeField] bool isGround;
+    [SerializeField] bool isCrouching;
 
     private void Awake()
     {
         rigid = GetComponent<Rigidbody>();
         animators = GetComponentsInChildren<Animator>();
         Cursor.lockState = CursorLockMode.Locked;
+
+        isWalk = false;
+        isSprint = false;
+        isReload = false;
+        aiming = false;
+        isGround = true;
+        isCrouching = false;
     }
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
@@ -49,44 +61,19 @@ public class LocalPlayer : MonoBehaviour
     {
         Vector2 vector = new Vector2(rigid.linearVelocity.x, rigid.linearVelocity.z);
         float Velocity = vector.magnitude/(sprintSpeed-1);
-        if(isWalk)
-        {
-            animators[0].SetBool("Walk", true);
-        }
-        else
-        {
-            animators[0].SetBool("Walk", false);
-        }
+        float CrouchVel = vector.magnitude / (walkSpeed / 2);
+       
+        animators[0].SetBool("Walk", isWalk);
+        animators[0].SetBool("Run", isSprint);
+        animators[0].SetBool("Aim", aiming);
+        animators[0].SetBool("Reloading", isReload);
 
-        if(isSprint)
-        {
-            animators[0].SetBool("Run", true);
-        }
-        else
-        {
-            animators[0].SetBool("Run", false);
-        }
-
-        if(aiming)
-        {
-            animators[0].SetBool("Aim", true);
-        }
-        else
-        {
-            animators[0].SetBool("Aim", false);
-        }
-
-        if(isReload)
-        {
-            animators[0].SetBool("Reloading", true);
-        }
-        else
-        {
-            animators[0].SetBool("Reloading", false);
-        }
-
+        animators[1].SetBool("Crouch", isCrouching);
+        animators[2].SetBool("Crouch", isCrouching);
         animators[1].SetFloat("Velocity", Velocity);
+        animators[1].SetFloat("CrouchVelocity", CrouchVel);
         animators[2].SetFloat("Velocity", Velocity);
+        animators[2].SetFloat("CrouchVelocity", CrouchVel);
 
         animators[1].SetFloat("DirX", moveInputVec.x);
         animators[1].SetFloat("DirZ", moveInputVec.y);
@@ -125,7 +112,7 @@ public class LocalPlayer : MonoBehaviour
         if(moveInputVec.magnitude > 0.1f)
         {
             
-            if(isSprint && !isReload)
+            if(isSprint && !isReload && !isCrouching)
             {
                 if (aiming)
                 {
@@ -141,7 +128,7 @@ public class LocalPlayer : MonoBehaviour
             }
             else
             {
-                if (aiming)
+                if (aiming || isCrouching)
                 {
                     currentSpeed += 5f * Time.fixedDeltaTime;
                     currentSpeed = Mathf.Min(currentSpeed, walkSpeed / 2);
@@ -188,6 +175,7 @@ public class LocalPlayer : MonoBehaviour
         if(context.performed)
         {
             isSprint = true;
+            isCrouching = false;
         }
         else if(context.canceled)
         {
@@ -225,8 +213,27 @@ public class LocalPlayer : MonoBehaviour
 
     public void OnJump(InputAction.CallbackContext context)
     {
-        if (!context.performed)
-            return;
-        rigid.linearVelocity += new Vector3(0, 1, 0) * jumpPower;
+        if (context.performed && isGround)
+        {
+            if(isCrouching)
+            {
+                isCrouching = false;
+            }
+            else
+            {
+                Vector3 jumpVel = rigid.linearVelocity;
+                jumpVel.y = jumpPower;
+                rigid.linearVelocity = jumpVel;
+            }
+        }
+        
+    }
+
+    public void OnCrouch(InputAction.CallbackContext context)
+    {
+        if(context.performed)
+        {
+            isCrouching = !isCrouching;
+        }
     }
 }
