@@ -17,6 +17,7 @@ public class LocalPlayer : MonoBehaviour
 
     [SerializeField] float verticalRotation = 0;
     [SerializeField] float currentSpeed =0;
+    [SerializeField] float VelocityY;
     [SerializeField] float walkSpeed;
     [SerializeField] float sprintSpeed;
     [SerializeField] float jumpPower;
@@ -53,12 +54,20 @@ public class LocalPlayer : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        VelocityY = rigid.linearVelocity.y;
         Move();
+        Crouching();
         AnimationControler();
     }
 
     void AnimationControler()
     {
+        if (isCrouching)
+            isSprint = false;
+
+        if (isReload)
+            isSprint = false;
+
         Vector2 vector = new Vector2(rigid.linearVelocity.x, rigid.linearVelocity.z);
         float Velocity = vector.magnitude/(sprintSpeed-1);
         float CrouchVel = vector.magnitude / (walkSpeed / 2);
@@ -67,16 +76,21 @@ public class LocalPlayer : MonoBehaviour
         animators[0].SetBool("Run", isSprint);
         animators[0].SetBool("Aim", aiming);
         animators[0].SetBool("Reloading", isReload);
+        animators[0].SetBool("Crouch", isCrouching);
 
+        animators[1].SetBool("Run", isSprint);
         animators[1].SetBool("Crouch", isCrouching);
-        animators[2].SetBool("Crouch", isCrouching);
+        animators[1].SetBool("Reloading", isReload);
         animators[1].SetFloat("Velocity", Velocity);
         animators[1].SetFloat("CrouchVelocity", CrouchVel);
-        animators[2].SetFloat("Velocity", Velocity);
-        animators[2].SetFloat("CrouchVelocity", CrouchVel);
-
         animators[1].SetFloat("DirX", moveInputVec.x);
         animators[1].SetFloat("DirZ", moveInputVec.y);
+
+        animators[2].SetBool("Run", isSprint);
+        animators[2].SetBool("Crouch", isCrouching);
+        animators[2].SetBool("Reloading", isReload);
+        animators[2].SetFloat("Velocity", Velocity);
+        animators[2].SetFloat("CrouchVelocity", CrouchVel);
         animators[2].SetFloat("DirX", moveInputVec.x);
         animators[2].SetFloat("DirZ", moveInputVec.y);
     }
@@ -100,6 +114,9 @@ public class LocalPlayer : MonoBehaviour
 
     void Move()
     {
+        if (!isGround)
+            return;
+
         Vector3 cameraForward = playerCamera.forward;
         Vector3 cameraRight = playerCamera.right;
 
@@ -142,11 +159,18 @@ public class LocalPlayer : MonoBehaviour
             }
             
         }
-        
 
         Vector3 velocity = moveDir * currentSpeed;
         velocity.y = rigid.linearVelocity.y;
         rigid.linearVelocity = velocity;
+    }
+
+    void Crouching()
+    {
+        float offset = isCrouching ? -0.5f : 0;
+        Vector3 pos = body.localPosition;
+        pos.y = Mathf.Lerp(pos.y, offset,1);
+        body.localPosition = pos;
     }
 
     public void OnLook(InputAction.CallbackContext context)
@@ -176,6 +200,7 @@ public class LocalPlayer : MonoBehaviour
         {
             isSprint = true;
             isCrouching = false;
+            isReload = false;
         }
         else if(context.canceled)
         {
@@ -209,6 +234,8 @@ public class LocalPlayer : MonoBehaviour
             return;
 
         animators[0].SetTrigger("Reload");
+        animators[1].SetTrigger("Reload");
+        animators[2].SetTrigger("Reload");
     }
 
     public void OnJump(InputAction.CallbackContext context)
@@ -233,7 +260,11 @@ public class LocalPlayer : MonoBehaviour
     {
         if(context.performed)
         {
-            isCrouching = !isCrouching;
+            isCrouching = !isCrouching; 
+            if(isCrouching)
+            {
+                isSprint = false;
+            }
         }
     }
 }
