@@ -34,6 +34,7 @@ public class LocalPlayer : MonoBehaviour
     private void Awake()
     {
         rigid = GetComponent<Rigidbody>();
+        rigid.constraints = RigidbodyConstraints.FreezeRotation;
         animators = GetComponentsInChildren<Animator>();
         Cursor.lockState = CursorLockMode.Locked;
 
@@ -58,6 +59,11 @@ public class LocalPlayer : MonoBehaviour
         Move();
         Crouching();
         AnimationControler();
+    }
+
+    private void FixedUpdate()
+    {
+        GroundCheck();
     }
 
     void AnimationControler()
@@ -165,6 +171,18 @@ public class LocalPlayer : MonoBehaviour
         rigid.linearVelocity = velocity;
     }
 
+    void GroundCheck()
+    {
+        CapsuleCollider coll = GetComponent<CapsuleCollider>();
+        Vector3 origin = transform.position;
+        Vector3 rayOrigin = transform.position + Vector3.down * (coll.height / 2f - coll.radius + 0.01f);
+        int mask = LayerMask.GetMask("Terrain");
+
+        isGround = Physics.Raycast(rayOrigin, Vector3.down, 0.25f,mask);
+        rigid.constraints = RigidbodyConstraints.FreezePositionY;
+        Debug.DrawRay(rayOrigin, Vector3.down * 0.25f, isGround ? Color.green : Color.red);
+    }
+
     void Crouching()
     {
         float offset = isCrouching ? -0.5f : 0;
@@ -248,6 +266,7 @@ public class LocalPlayer : MonoBehaviour
             }
             else
             {
+                rigid.constraints = RigidbodyConstraints.FreezePositionY;
                 Vector3 jumpVel = rigid.linearVelocity;
                 jumpVel.y = jumpPower;
                 rigid.linearVelocity = jumpVel;
