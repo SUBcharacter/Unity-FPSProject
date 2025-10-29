@@ -34,7 +34,6 @@ public class LocalPlayer : MonoBehaviour
     private void Awake()
     {
         rigid = GetComponent<Rigidbody>();
-        rigid.constraints = RigidbodyConstraints.FreezeRotation;
         animators = GetComponentsInChildren<Animator>();
         Cursor.lockState = CursorLockMode.Locked;
 
@@ -77,26 +76,32 @@ public class LocalPlayer : MonoBehaviour
         Vector2 vector = new Vector2(rigid.linearVelocity.x, rigid.linearVelocity.z);
         float Velocity = vector.magnitude/(sprintSpeed-1);
         float CrouchVel = vector.magnitude / (walkSpeed / 2);
+        float Yvelocity = VelocityY / jumpPower;
        
         animators[0].SetBool("Walk", isWalk);
         animators[0].SetBool("Run", isSprint);
         animators[0].SetBool("Aim", aiming);
         animators[0].SetBool("Reloading", isReload);
         animators[0].SetBool("Crouch", isCrouching);
+        animators[0].SetBool("OnGround", isGround);
 
         animators[1].SetBool("Run", isSprint);
         animators[1].SetBool("Crouch", isCrouching);
         animators[1].SetBool("Reloading", isReload);
+        animators[1].SetBool("OnGround", isGround);
         animators[1].SetFloat("Velocity", Velocity);
         animators[1].SetFloat("CrouchVelocity", CrouchVel);
+        animators[1].SetFloat("VelocityY", Yvelocity);
         animators[1].SetFloat("DirX", moveInputVec.x);
         animators[1].SetFloat("DirZ", moveInputVec.y);
 
         animators[2].SetBool("Run", isSprint);
         animators[2].SetBool("Crouch", isCrouching);
         animators[2].SetBool("Reloading", isReload);
+        animators[2].SetBool("OnGround", isGround);
         animators[2].SetFloat("Velocity", Velocity);
         animators[2].SetFloat("CrouchVelocity", CrouchVel);
+        animators[2].SetFloat("VelocityY", Yvelocity);
         animators[2].SetFloat("DirX", moveInputVec.x);
         animators[2].SetFloat("DirZ", moveInputVec.y);
     }
@@ -179,7 +184,10 @@ public class LocalPlayer : MonoBehaviour
         int mask = LayerMask.GetMask("Terrain");
 
         isGround = Physics.Raycast(rayOrigin, Vector3.down, 0.25f,mask);
-        rigid.constraints = RigidbodyConstraints.FreezePositionY;
+
+        rigid.useGravity = !isGround;
+        
+        
         Debug.DrawRay(rayOrigin, Vector3.down * 0.25f, isGround ? Color.green : Color.red);
     }
 
@@ -266,10 +274,11 @@ public class LocalPlayer : MonoBehaviour
             }
             else
             {
-                rigid.constraints = RigidbodyConstraints.FreezePositionY;
+                
                 Vector3 jumpVel = rigid.linearVelocity;
                 jumpVel.y = jumpPower;
                 rigid.linearVelocity = jumpVel;
+                
             }
         }
         
