@@ -1,12 +1,15 @@
+using Unity.Cinemachine;
 using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.Rendering;
 
 public class LocalPlayer : MonoBehaviour
 {
     // ¾ÉÀ» ½Ã body YÁÂÇ¥ -0.5
     [SerializeField] Transform body;
     [SerializeField] Transform playerCamera;
+    [SerializeField] CinemachineCamera fov;
     [SerializeField] Rigidbody rigid;
     [SerializeField] Transform vertical;
     [SerializeField] Animator[] animators;
@@ -23,6 +26,8 @@ public class LocalPlayer : MonoBehaviour
     [SerializeField] float jumpPower;
     [SerializeField] float mouseSensitivity;
     [SerializeField] float maxMouseSensitivity;
+    [SerializeField] float defaultFov;
+    [SerializeField] float aimFov;
 
     [SerializeField] bool isWalk;
     [SerializeField] bool isSprint;
@@ -36,6 +41,9 @@ public class LocalPlayer : MonoBehaviour
         rigid = GetComponent<Rigidbody>();
         animators = GetComponentsInChildren<Animator>();
         Cursor.lockState = CursorLockMode.Locked;
+
+        defaultFov = fov.Lens.FieldOfView;
+        aimFov = fov.Lens.FieldOfView - 20;
 
         isWalk = false;
         isSprint = false;
@@ -62,6 +70,7 @@ public class LocalPlayer : MonoBehaviour
 
     private void FixedUpdate()
     {
+        View();
         GroundCheck();
     }
 
@@ -98,7 +107,7 @@ public class LocalPlayer : MonoBehaviour
         animators[2].SetBool("Run", isSprint);
         animators[2].SetBool("Crouch", isCrouching);
         animators[2].SetBool("Reloading", isReload);
-        animators[2].SetBool("OnGround", isGround);
+        animators[2].SetBool("OnGround", isGround); 
         animators[2].SetFloat("Velocity", Velocity);
         animators[2].SetFloat("CrouchVelocity", CrouchVel);
         animators[2].SetFloat("VelocityY", Yvelocity);
@@ -108,14 +117,29 @@ public class LocalPlayer : MonoBehaviour
 
     void View()
     {
-        float mouseX = mouseInputVec.x * mouseSensitivity;
-        float mouseY = -mouseInputVec.y * mouseSensitivity;
+        float mouseX;
+        float mouseY;
+        if (aiming)
+        {
+            mouseX = mouseInputVec.x * (mouseSensitivity * 0.7f);
+            mouseY = -mouseInputVec.y * (mouseSensitivity * 0.7f);
+            fov.Lens.FieldOfView = Mathf.Lerp(fov.Lens.FieldOfView, aimFov, 10 * Time.deltaTime);
+        }
+        else
+        {
+            mouseX = mouseInputVec.x * mouseSensitivity;
+            mouseY = -mouseInputVec.y * mouseSensitivity;
+            fov.Lens.FieldOfView = Mathf.Lerp(fov.Lens.FieldOfView, defaultFov, 10 * Time.deltaTime);
+        }
+        
 
         verticalRotation += mouseY;
         verticalRotation = Mathf.Clamp(verticalRotation, -85f, 85f);
 
         vertical.localRotation = Quaternion.Euler(verticalRotation, 0f, 0f);
         transform.Rotate(Vector3.up, mouseX);
+
+
     }
 
     public void Reloading()
@@ -202,7 +226,7 @@ public class LocalPlayer : MonoBehaviour
     public void OnLook(InputAction.CallbackContext context)
     {
         mouseInputVec = context.ReadValue<Vector2>();
-        View();
+        
     }
 
     public void OnMove(InputAction.CallbackContext context)
@@ -256,7 +280,7 @@ public class LocalPlayer : MonoBehaviour
 
     public void OnReload(InputAction.CallbackContext context)
     {
-        if (!context.performed)
+        if (!context.performed || aiming || isReload)
             return;
 
         animators[0].SetTrigger("Reload");
