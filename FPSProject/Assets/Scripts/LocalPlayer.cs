@@ -1,3 +1,4 @@
+using System.Collections;
 using Unity.Cinemachine;
 using Unity.VisualScripting;
 using UnityEngine;
@@ -9,6 +10,9 @@ public class LocalPlayer : MonoBehaviour
     // ¾ÉÀ» ½Ã body YÁÂÇ¥ -0.5
     [SerializeField] Transform body;
     [SerializeField] Transform playerCamera;
+    [SerializeField] ParticleSystem muzzleFlash;
+    [SerializeField] ParticleSystem spark;
+    [SerializeField] Light muzzleLight;
     [SerializeField] CinemachineCamera fov;
     [SerializeField] Rigidbody rigid;
     [SerializeField] Transform vertical;
@@ -28,6 +32,7 @@ public class LocalPlayer : MonoBehaviour
     [SerializeField] float maxMouseSensitivity;
     [SerializeField] float defaultFov;
     [SerializeField] float aimFov;
+    [SerializeField] float fireRate;
 
     [SerializeField] bool isWalk;
     [SerializeField] bool isSprint;
@@ -35,6 +40,7 @@ public class LocalPlayer : MonoBehaviour
     [SerializeField] bool aiming;
     [SerializeField] bool isGround;
     [SerializeField] bool isCrouching;
+    [SerializeField] bool isFiring;
 
     private void Awake()
     {
@@ -49,28 +55,30 @@ public class LocalPlayer : MonoBehaviour
         isSprint = false;
         isReload = false;
         aiming = false;
-        isGround = true;
+        isGround = false;
         isCrouching = false;
+        isFiring = false;
     }
 
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
+    
     void Start()
     {
         
     }
 
-    // Update is called once per frame
+   
     void Update()
     {
         VelocityY = rigid.linearVelocity.y;
-        Move();
-        Crouching();
+        
         AnimationControler();
     }
 
     private void FixedUpdate()
     {
         View();
+        Move();
+        Crouching();
         GroundCheck();
     }
 
@@ -86,7 +94,7 @@ public class LocalPlayer : MonoBehaviour
         float Velocity = vector.magnitude/(sprintSpeed-1);
         float CrouchVel = vector.magnitude / (walkSpeed / 2);
         float Yvelocity = VelocityY / jumpPower;
-       
+        
         animators[0].SetBool("Walk", isWalk);
         animators[0].SetBool("Run", isSprint);
         animators[0].SetBool("Aim", aiming);
@@ -163,7 +171,6 @@ public class LocalPlayer : MonoBehaviour
         moveDir = cameraRight*moveInputVec.x + cameraForward*moveInputVec.y;
         if(moveInputVec.magnitude > 0.1f)
         {
-            
             if(isSprint && !isReload && !isCrouching)
             {
                 if (aiming)
@@ -176,7 +183,6 @@ public class LocalPlayer : MonoBehaviour
                     currentSpeed += 10f * Time.fixedDeltaTime;
                     currentSpeed = Mathf.Min(currentSpeed, sprintSpeed);
                 }
-                
             }
             else
             {
@@ -190,9 +196,7 @@ public class LocalPlayer : MonoBehaviour
                     currentSpeed += 5f * Time.fixedDeltaTime;
                     currentSpeed = Mathf.Min(currentSpeed, walkSpeed);
                 }
-                
             }
-            
         }
 
         Vector3 velocity = moveDir * currentSpeed;
@@ -221,6 +225,19 @@ public class LocalPlayer : MonoBehaviour
         Vector3 pos = body.localPosition;
         pos.y = Mathf.Lerp(pos.y, offset,1);
         body.localPosition = pos;
+    }
+
+    public void MuzzleFlashOn()
+    {
+        muzzleFlash.Play();
+        spark.Play();
+        StartCoroutine(MuzzleFlashLight());
+    }
+
+    public void MuzzleFlashOff()
+    {
+        muzzleFlash.Stop();
+        spark.Stop();
     }
 
     public void OnLook(InputAction.CallbackContext context)
@@ -262,7 +279,12 @@ public class LocalPlayer : MonoBehaviour
     {
         if(context.performed)
         {
-            animators[0].SetTrigger("Shoot");                                                       
+            isFiring = true;
+            StartCoroutine(Fire());
+        }
+        else if(context.canceled)
+        {
+            isFiring = false;
         }
     }
 
@@ -298,11 +320,9 @@ public class LocalPlayer : MonoBehaviour
             }
             else
             {
-                
                 Vector3 jumpVel = rigid.linearVelocity;
                 jumpVel.y = jumpPower;
                 rigid.linearVelocity = jumpVel;
-                
             }
         }
         
@@ -317,6 +337,29 @@ public class LocalPlayer : MonoBehaviour
             {
                 isSprint = false;
             }
+        }
+    }
+
+    IEnumerator MuzzleFlashLight()
+    {
+        muzzleLight.enabled = true;
+        yield return new WaitForSeconds(0.05f);
+        muzzleLight.enabled = false;
+    }
+
+    IEnumerator Fire()
+    {
+        while(isFiring)
+        {
+            if (!aiming)
+            {
+                animators[0].Play("Fire",0,0f);
+            }
+            else
+            {
+                animators[0].Play("Aim Fire",0,0f);
+            }
+            yield return CoroutineCasher.Wait(fireRate);
         }
     }
 }
