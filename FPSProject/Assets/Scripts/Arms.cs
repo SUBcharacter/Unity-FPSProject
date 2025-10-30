@@ -11,7 +11,12 @@ public class Arms : MonoBehaviour
 
     public void Fire()
     {
+        player.Launch();
+    }
 
+    public void FillUp()
+    {
+        player.FillUp();
     }
 
     public void Reload()

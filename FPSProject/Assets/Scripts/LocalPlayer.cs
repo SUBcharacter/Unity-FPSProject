@@ -10,17 +10,21 @@ public class LocalPlayer : MonoBehaviour
     // ¾ÉÀ» ½Ã body YÁÂÇ¥ -0.5
     [SerializeField] Transform body;
     [SerializeField] Transform playerCamera;
+    [SerializeField] Transform firePoint;
     [SerializeField] ParticleSystem muzzleFlash;
     [SerializeField] ParticleSystem spark;
     [SerializeField] Light muzzleLight;
     [SerializeField] CinemachineCamera fov;
+    [SerializeField] Camera cam;
     [SerializeField] Rigidbody rigid;
     [SerializeField] Transform vertical;
     [SerializeField] Animator[] animators;
+    [SerializeField] Magazine magazine;
 
     [SerializeField] Vector2 mouseInputVec;
     [SerializeField] Vector2 moveInputVec;
     [SerializeField] Vector3 moveDir;
+    [SerializeField] LayerMask shootAble;
 
     [SerializeField] float verticalRotation = 0;
     [SerializeField] float currentSpeed =0;
@@ -33,6 +37,9 @@ public class LocalPlayer : MonoBehaviour
     [SerializeField] float defaultFov;
     [SerializeField] float aimFov;
     [SerializeField] float fireRate;
+
+    [SerializeField] int bulletCount;
+    [SerializeField] int fullMagazine;
 
     [SerializeField] bool isWalk;
     [SerializeField] bool isSprint;
@@ -155,6 +162,11 @@ public class LocalPlayer : MonoBehaviour
         isReload = !isReload;
     }
 
+    public void FillUp()
+    {
+        bulletCount = fullMagazine;
+    }
+
     void Move()
     {
         if (!isGround)
@@ -240,6 +252,27 @@ public class LocalPlayer : MonoBehaviour
         spark.Stop();
     }
 
+    public void Launch()
+    {
+        if (bulletCount <= 0)
+            return;
+        bulletCount--;
+
+        Ray ray = cam.ScreenPointToRay(Input.mousePosition);
+        RaycastHit hit;
+
+        Vector3 targetPoint = (Physics.Raycast(ray, out hit, 100f,shootAble)) ? hit.point : ray.origin + ray.direction * 100f;
+
+        Vector3 dir = (targetPoint - firePoint.position).normalized;
+
+        Vector3 firePos = firePoint.position;
+
+        Debug.DrawRay(ray.origin, ray.direction * 100f, Color.red, 1f);
+
+        magazine.Fire(dir, firePos);
+
+    }
+
     public void OnLook(InputAction.CallbackContext context)
     {
         mouseInputVec = context.ReadValue<Vector2>();
@@ -279,6 +312,8 @@ public class LocalPlayer : MonoBehaviour
     {
         if(context.performed)
         {
+            if (bulletCount <= 0)
+                return;
             isFiring = true;
             StartCoroutine(Fire());
         }
@@ -351,6 +386,9 @@ public class LocalPlayer : MonoBehaviour
     {
         while(isFiring)
         {
+            if (bulletCount <= 0)
+                yield break;
+
             if (!aiming)
             {
                 animators[0].Play("Fire",0,0f);
