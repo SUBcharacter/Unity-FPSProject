@@ -37,6 +37,9 @@ public class LocalPlayer : MonoBehaviour
     [SerializeField] float defaultFov;
     [SerializeField] float aimFov;
     [SerializeField] float fireRate;
+    [SerializeField] float recoilForce;
+    [SerializeField] float recoilVerticalOffset;
+    [SerializeField] float recoilHorizontalOffset;
 
     [SerializeField] int bulletCount;
     [SerializeField] int fullMagazine;
@@ -77,7 +80,7 @@ public class LocalPlayer : MonoBehaviour
     void Update()
     {
         VelocityY = rigid.linearVelocity.y;
-        
+        RecoilRecovery();
         AnimationControler();
     }
 
@@ -257,11 +260,19 @@ public class LocalPlayer : MonoBehaviour
         if (bulletCount <= 0)
             return;
         bulletCount--;
-
-        Ray ray = cam.ScreenPointToRay(Input.mousePosition);
+        Ray ray;
         RaycastHit hit;
-
-        Vector3 targetPoint = (Physics.Raycast(ray, out hit, 100f,shootAble)) ? hit.point : ray.origin + ray.direction * 100f;
+        if (!aiming)
+        {
+            ray = cam.ViewportPointToRay(new Vector3(0.5f, 0.5f, 0));
+            Vector2 spread = Random.insideUnitCircle * 0.0521f;
+            ray.direction = (ray.direction + cam.transform.right * spread.x + cam.transform.up * spread.y).normalized;
+        }
+        else
+        {
+            ray = cam.ScreenPointToRay(Input.mousePosition);
+        }
+        Vector3 targetPoint = (Physics.Raycast(ray, out hit, 100f, shootAble)) ? hit.point : ray.origin + ray.direction * 100f;
 
         Vector3 dir = (targetPoint - firePoint.position).normalized;
 
@@ -271,6 +282,17 @@ public class LocalPlayer : MonoBehaviour
 
         magazine.Fire(dir, firePos);
 
+        StartCoroutine(Recoil());
+
+    }
+
+    void RecoilRecovery()
+    {
+        recoilVerticalOffset = Mathf.Lerp(recoilVerticalOffset, 0f, 0.5f);
+        recoilHorizontalOffset = Mathf.Lerp(recoilHorizontalOffset, 0f, 0.5f);
+
+        verticalRotation -= recoilVerticalOffset;
+        transform.Rotate(Vector3.up, recoilHorizontalOffset);
     }
 
     public void OnLook(InputAction.CallbackContext context)
@@ -315,6 +337,7 @@ public class LocalPlayer : MonoBehaviour
             if (bulletCount <= 0)
                 return;
             isFiring = true;
+            isReload = false;
             StartCoroutine(Fire());
         }
         else if(context.canceled)
@@ -355,6 +378,7 @@ public class LocalPlayer : MonoBehaviour
             }
             else
             {
+                isReload = false;
                 Vector3 jumpVel = rigid.linearVelocity;
                 jumpVel.y = jumpPower;
                 rigid.linearVelocity = jumpVel;
@@ -399,5 +423,18 @@ public class LocalPlayer : MonoBehaviour
             }
             yield return CoroutineCasher.Wait(fireRate);
         }
+    }
+
+    IEnumerator Recoil()
+    {
+        recoilVerticalOffset += recoilForce;
+
+        float horizontalRecoil = 0.5f;
+        float randomHoriReco = Random.Range(-0.03f, 0.03f);
+
+        recoilHorizontalOffset += horizontalRecoil + randomHoriReco;
+
+
+        yield return null;
     }
 }

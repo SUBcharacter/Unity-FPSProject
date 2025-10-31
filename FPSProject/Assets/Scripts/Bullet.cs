@@ -5,8 +5,8 @@ public class Bullet : MonoBehaviour
 {
     [SerializeField] Rigidbody rigid;
     [SerializeField] Light bulletLight;
-    [SerializeField] ParticleSystem bulletHole;
     [SerializeField] ParticleSystem bulletSpark;
+    [SerializeField] ParticleSystem bulletHole;
 
     [SerializeField] float speed;
 
@@ -24,34 +24,29 @@ public class Bullet : MonoBehaviour
         bulletLight.enabled = true;
         transform.position = pos;
         rigid.linearVelocity = Vector3.zero;
-
-        bulletHole.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
-        bulletSpark.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
         gameObject.SetActive(true);
+        rigid.AddForce(dir * speed,ForceMode.VelocityChange);
 
-        rigid.linearVelocity = dir * speed;
     }
 
     private void OnTriggerEnter(Collider other)
     {
         if (!(other.gameObject.layer == LayerMask.NameToLayer("Terrain")))
             return;
-        bulletLight.enabled = false;
         rigid.linearVelocity = Vector3.zero;
+        bulletLight.enabled = false;
 
-        StartCoroutine(TerrainImpact());
+        StartCoroutine(BulletImpact());
+
     }
 
-    IEnumerator TerrainImpact()
+    IEnumerator BulletImpact()
     {
         bulletHole.Play();
         bulletSpark.Play();
-
-        
 
         yield return CoroutineCasher.Wait(3f);
 
         gameObject.SetActive(false);
     }
-
 }
