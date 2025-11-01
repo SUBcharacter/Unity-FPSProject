@@ -33,4 +33,14 @@ public class Arms : MonoBehaviour
     {
         player.MuzzleFlashOff();
     }
+
+    public void HolsterIn()
+    {
+        player.HolsterInSound();
+    }
+
+    public void HolsterOut()
+    {
+        player.HolsterOutSound();
+    }
 }

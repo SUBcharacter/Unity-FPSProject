@@ -7,6 +7,8 @@ public class Bullet : MonoBehaviour
     [SerializeField] Light bulletLight;
     [SerializeField] ParticleSystem bulletSpark;
     [SerializeField] ParticleSystem bulletHole;
+    [SerializeField] AudioSource audioSource;
+    [SerializeField] AudioClip[] clips;
 
     [SerializeField] float speed;
 
@@ -15,8 +17,7 @@ public class Bullet : MonoBehaviour
     {
         rigid = GetComponent<Rigidbody>();
         bulletLight = GetComponent<Light>();
-
-
+        audioSource = GetComponent<AudioSource>();
     }
 
     public void Init(Vector3 dir, Vector3 pos)
@@ -42,6 +43,10 @@ public class Bullet : MonoBehaviour
 
     IEnumerator BulletImpact()
     {
+        int index = Random.Range(0, 4);
+
+        audioSource.clip = clips[index];
+        audioSource.Play();
         bulletHole.Play();
         bulletSpark.Play();
 

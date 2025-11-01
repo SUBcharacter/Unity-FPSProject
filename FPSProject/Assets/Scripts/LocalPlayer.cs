@@ -4,6 +4,7 @@ using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.Rendering;
+using UnityEngine.UI;
 
 public class LocalPlayer : MonoBehaviour
 {
@@ -20,6 +21,16 @@ public class LocalPlayer : MonoBehaviour
     [SerializeField] Transform vertical;
     [SerializeField] Animator[] animators;
     [SerializeField] Magazine magazine;
+    [SerializeField] AudioClip shootSound;
+    [SerializeField] AudioClip walkSound;
+    [SerializeField] AudioClip runSound;
+    [SerializeField] AudioClip aimingSound;
+    [SerializeField] AudioClip reloadSound1;
+    [SerializeField] AudioClip reloadSound2;
+    [SerializeField] AudioClip holsterIn;
+    [SerializeField] AudioClip holsterOut;
+    [SerializeField] Image crosshair;
+
 
     [SerializeField] Vector2 mouseInputVec;
     [SerializeField] Vector2 moveInputVec;
@@ -82,6 +93,7 @@ public class LocalPlayer : MonoBehaviour
         VelocityY = rigid.linearVelocity.y;
         RecoilRecovery();
         AnimationControler();
+        MoveSoundControler();
     }
 
     private void FixedUpdate()
@@ -132,6 +144,53 @@ public class LocalPlayer : MonoBehaviour
         animators[2].SetFloat("DirX", moveInputVec.x);
         animators[2].SetFloat("DirZ", moveInputVec.y);
     }
+    
+    void MoveSoundControler()
+    {
+        if (!isGround)
+        {
+            PlayerMoveAudio.audioSource.Stop();
+            return;
+        }
+            
+
+        if(isWalk)
+        {
+            if(isSprint && !aiming)
+            {
+                PlayerMoveAudio.audioSource.clip = runSound;
+                PlayerMoveAudio.audioSource.loop = true;
+            }
+            else
+            {
+                if(aiming)
+                {
+                    PlayerMoveAudio.audioSource.pitch = 0.5f;
+                    PlayerMoveAudio.audioSource.clip = walkSound;
+                    PlayerMoveAudio.audioSource.loop = true;
+                }
+                else
+                {
+                    PlayerMoveAudio.audioSource.pitch = 1f;
+                    PlayerMoveAudio.audioSource.clip = walkSound;
+                    PlayerMoveAudio.audioSource.loop = true;
+                }
+                
+            }
+
+            if (!PlayerMoveAudio.audioSource.isPlaying)
+            {
+                PlayerMoveAudio.audioSource.Play();
+            }
+        }
+        else
+        {
+            PlayerMoveAudio.audioSource.Stop();
+        }
+
+        
+
+    }
 
     void View()
     {
@@ -159,7 +218,7 @@ public class LocalPlayer : MonoBehaviour
 
 
     }
-
+    #region AnimationEventFunc
     public void Reloading()
     {
         isReload = !isReload;
@@ -170,6 +229,60 @@ public class LocalPlayer : MonoBehaviour
         bulletCount = fullMagazine;
     }
 
+    public void MuzzleFlashOn()
+    {
+        muzzleFlash.Play();
+        spark.Play();
+        StartCoroutine(MuzzleFlashLight());
+    }
+
+    public void MuzzleFlashOff()
+    {
+        muzzleFlash.Stop();
+        spark.Stop();
+    }
+    public void Launch()
+    {
+        if (bulletCount <= 0)
+            return;
+        bulletCount--;
+        Ray ray;
+        RaycastHit hit;
+        if (!aiming)
+        {
+            ray = cam.ViewportPointToRay(new Vector3(0.5f, 0.5f, 0));
+            Vector2 spread = Random.insideUnitCircle * 0.0521f;
+            ray.direction = (ray.direction + cam.transform.right * spread.x + cam.transform.up * spread.y).normalized;
+        }
+        else
+        {
+            ray = cam.ScreenPointToRay(Input.mousePosition);
+        }
+        Vector3 targetPoint = (Physics.Raycast(ray, out hit, 100f, shootAble)) ? hit.point : ray.origin + ray.direction * 100f;
+
+        Vector3 dir = (targetPoint - firePoint.position).normalized;
+
+        Vector3 firePos = firePoint.position;
+
+        Debug.DrawRay(ray.origin, ray.direction * 100f, Color.red, 1f);
+
+        magazine.Fire(dir, firePos);
+        PlayerShotAudio.PlaySound(shootSound);
+
+        StartCoroutine(Recoil());
+    }
+
+    public void HolsterInSound()
+    {
+        PlayerActAudio.PlaySound(holsterIn);
+    }
+
+    public void HolsterOutSound()
+    {
+        PlayerActAudio.PlaySound(holsterOut);
+    }
+
+    #endregion
     void Move()
     {
         if (!isGround)
@@ -242,49 +355,7 @@ public class LocalPlayer : MonoBehaviour
         body.localPosition = pos;
     }
 
-    public void MuzzleFlashOn()
-    {
-        muzzleFlash.Play();
-        spark.Play();
-        StartCoroutine(MuzzleFlashLight());
-    }
-
-    public void MuzzleFlashOff()
-    {
-        muzzleFlash.Stop();
-        spark.Stop();
-    }
-
-    public void Launch()
-    {
-        if (bulletCount <= 0)
-            return;
-        bulletCount--;
-        Ray ray;
-        RaycastHit hit;
-        if (!aiming)
-        {
-            ray = cam.ViewportPointToRay(new Vector3(0.5f, 0.5f, 0));
-            Vector2 spread = Random.insideUnitCircle * 0.0521f;
-            ray.direction = (ray.direction + cam.transform.right * spread.x + cam.transform.up * spread.y).normalized;
-        }
-        else
-        {
-            ray = cam.ScreenPointToRay(Input.mousePosition);
-        }
-        Vector3 targetPoint = (Physics.Raycast(ray, out hit, 100f, shootAble)) ? hit.point : ray.origin + ray.direction * 100f;
-
-        Vector3 dir = (targetPoint - firePoint.position).normalized;
-
-        Vector3 firePos = firePoint.position;
-
-        Debug.DrawRay(ray.origin, ray.direction * 100f, Color.red, 1f);
-
-        magazine.Fire(dir, firePos);
-
-        StartCoroutine(Recoil());
-
-    }
+    
 
     void RecoilRecovery()
     {
@@ -351,10 +422,12 @@ public class LocalPlayer : MonoBehaviour
         if(context.performed)
         {
             aiming = true;
+            PlayerActAudio.PlaySound(aimingSound);
         }
         else if(context.canceled)
         {
             aiming = false;
+            PlayerActAudio.PlaySound(aimingSound);
         }
     }
 
@@ -363,7 +436,18 @@ public class LocalPlayer : MonoBehaviour
         if (!context.performed || aiming || isReload)
             return;
 
-        animators[0].SetTrigger("Reload");
+
+        if(bulletCount <= 0)
+        {
+            animators[0].SetTrigger("ReloadEmpty");
+            PlayerActAudio.PlaySound(reloadSound2);
+        }
+        else
+        {
+            animators[0].SetTrigger("ReloadLeft");
+            PlayerActAudio.PlaySound(reloadSound1);
+        }
+        
         animators[1].SetTrigger("Reload");
         animators[2].SetTrigger("Reload");
     }
@@ -427,6 +511,10 @@ public class LocalPlayer : MonoBehaviour
 
     IEnumerator Recoil()
     {
+        if(!aiming)
+        {
+            yield break;
+        }
         recoilVerticalOffset += recoilForce;
 
         float horizontalRecoil = 0.5f;
