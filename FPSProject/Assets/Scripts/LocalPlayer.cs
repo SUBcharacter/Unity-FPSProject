@@ -201,12 +201,18 @@ public class LocalPlayer : MonoBehaviour
             mouseX = mouseInputVec.x * (mouseSensitivity * 0.7f);
             mouseY = -mouseInputVec.y * (mouseSensitivity * 0.7f);
             fov.Lens.FieldOfView = Mathf.Lerp(fov.Lens.FieldOfView, aimFov, 10 * Time.deltaTime);
+            Color color = crosshair.color;
+            color.a = Mathf.Lerp(color.a, 0, 10);
+            crosshair.color = color;
         }
         else
         {
             mouseX = mouseInputVec.x * mouseSensitivity;
             mouseY = -mouseInputVec.y * mouseSensitivity;
             fov.Lens.FieldOfView = Mathf.Lerp(fov.Lens.FieldOfView, defaultFov, 10 * Time.deltaTime);
+            Color color = crosshair.color;
+            color.a = Mathf.Lerp(color.a, 255, 10);
+            crosshair.color = color;
         }
         
 
@@ -335,16 +341,17 @@ public class LocalPlayer : MonoBehaviour
     void GroundCheck()
     {
         CapsuleCollider coll = GetComponent<CapsuleCollider>();
-        Vector3 origin = transform.position;
+        float radius = coll.radius * 0.9f;
+        float checkDist = 0.25f;
         Vector3 rayOrigin = transform.position + Vector3.down * (coll.height / 2f - coll.radius + 0.01f);
         int mask = LayerMask.GetMask("Terrain");
 
-        isGround = Physics.Raycast(rayOrigin, Vector3.down, 0.25f,mask);
+        isGround = Physics.SphereCast(rayOrigin, radius, Vector3.down, out RaycastHit hit, checkDist, mask); 
 
         rigid.useGravity = !isGround;
         
         
-        Debug.DrawRay(rayOrigin, Vector3.down * 0.25f, isGround ? Color.green : Color.red);
+        Debug.DrawRay(rayOrigin, Vector3.down * checkDist, isGround ? Color.green : Color.red);
     }
 
     void Crouching()
@@ -365,6 +372,8 @@ public class LocalPlayer : MonoBehaviour
         verticalRotation -= recoilVerticalOffset;
         transform.Rotate(Vector3.up, recoilHorizontalOffset);
     }
+
+    
 
     public void OnLook(InputAction.CallbackContext context)
     {
