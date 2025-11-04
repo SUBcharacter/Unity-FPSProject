@@ -9,6 +9,7 @@ public class Bullet : MonoBehaviour
     [SerializeField] ParticleSystem bulletHole;
     [SerializeField] AudioSource audioSource;
     [SerializeField] AudioClip[] clips;
+    
 
     [SerializeField] float speed;
 
@@ -32,12 +33,14 @@ public class Bullet : MonoBehaviour
 
     private void OnTriggerEnter(Collider other)
     {
-        if (!(other.gameObject.layer == LayerMask.NameToLayer("Terrain")))
-            return;
-        rigid.linearVelocity = Vector3.zero;
-        bulletLight.enabled = false;
+        if ((other.gameObject.layer == LayerMask.NameToLayer("Terrain")) || (other.gameObject.layer == LayerMask.NameToLayer("Terrain")))
+        {
+            rigid.linearVelocity = Vector3.zero;
+            bulletLight.enabled = false;
 
-        StartCoroutine(BulletImpact());
+            StartCoroutine(BulletImpact());
+        }
+        
 
     }
 
