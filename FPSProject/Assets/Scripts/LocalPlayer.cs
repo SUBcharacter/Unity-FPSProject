@@ -30,6 +30,8 @@ public class LocalPlayer : MonoBehaviour
     [SerializeField] AudioClip holsterIn;
     [SerializeField] AudioClip holsterOut;
     [SerializeField] Image crosshair;
+    [SerializeField] Text currentMagazine;
+    [SerializeField] Text ammoMax;
 
 
     [SerializeField] Vector2 mouseInputVec;
@@ -79,6 +81,9 @@ public class LocalPlayer : MonoBehaviour
         isGround = false;
         isCrouching = false;
         isFiring = false;
+
+        currentMagazine.text = bulletCount.ToString();
+        ammoMax.text = (fullMagazine + 1).ToString();
     }
 
     
@@ -91,6 +96,7 @@ public class LocalPlayer : MonoBehaviour
     void Update()
     {
         VelocityY = rigid.linearVelocity.y;
+        currentMagazine.text = bulletCount.ToString();
         RecoilRecovery();
         AnimationControler();
         MoveSoundControler();
@@ -232,7 +238,15 @@ public class LocalPlayer : MonoBehaviour
 
     public void FillUp()
     {
-        bulletCount = fullMagazine;
+        if(bulletCount <= 0)
+        {
+            bulletCount = fullMagazine;
+        }
+        else
+        {
+            bulletCount = fullMagazine + 1;
+        }
+        
     }
 
     public void MuzzleFlashOn()

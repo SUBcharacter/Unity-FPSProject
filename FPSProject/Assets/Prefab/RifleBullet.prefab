@@ -5369,7 +5369,7 @@ MonoBehaviour:
   - {fileID: 8300000, guid: f49b461f95e0def45b1ad2a5a350e574, type: 3}
   - {fileID: 8300000, guid: 091908a06d0b56143aaf6d3913444ab7, type: 3}
   - {fileID: 8300000, guid: fd208dd7a0eafc84f82ad5fde72ab8fc, type: 3}
-  speed: 100
+  speed: 90
 --- !u!1 &6643426474232734903
 GameObject:
   m_ObjectHideFlags: 0
@@ -5397,7 +5397,7 @@ Transform:
   m_GameObject: {fileID: 6643426474232734903}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: -0, z: -3.97}
+  m_LocalPosition: {x: 0, y: -0, z: -4}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []

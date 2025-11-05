@@ -33,18 +33,25 @@ public class Bullet : MonoBehaviour
 
     private void OnTriggerEnter(Collider other)
     {
-        if ((other.gameObject.layer == LayerMask.NameToLayer("Terrain")) || (other.gameObject.layer == LayerMask.NameToLayer("Terrain")))
+        if ((other.gameObject.layer == LayerMask.NameToLayer("Terrain")) || (other.gameObject.layer == LayerMask.NameToLayer("Enviroment")))
         {
             rigid.linearVelocity = Vector3.zero;
             bulletLight.enabled = false;
 
-            StartCoroutine(BulletImpact());
+            StartCoroutine(BulletTerrainImpact());
+        }
+        else if(other.gameObject.layer == LayerMask.NameToLayer("Enemy"))
+        {
+            rigid.linearVelocity = Vector3.zero;
+            bulletLight.enabled = false;
+
+            StartCoroutine(BulletEnemyImpact());
         }
         
 
     }
 
-    IEnumerator BulletImpact()
+    IEnumerator BulletTerrainImpact()
     {
         int index = Random.Range(0, 4);
 
@@ -54,6 +61,19 @@ public class Bullet : MonoBehaviour
         bulletSpark.Play();
 
         yield return CoroutineCasher.Wait(3f);
+
+        gameObject.SetActive(false);
+    }
+    
+    IEnumerator BulletEnemyImpact()
+    {
+        int index = Random.Range(0, 4);
+        audioSource.clip = clips[index];
+        audioSource.Play();
+
+        bulletSpark.Play();
+
+        yield return CoroutineCasher.Wait(1f);
 
         gameObject.SetActive(false);
     }
