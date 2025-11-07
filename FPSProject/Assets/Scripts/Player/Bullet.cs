@@ -9,10 +9,10 @@ public class Bullet : MonoBehaviour
     [SerializeField] ParticleSystem bulletHole;
     [SerializeField] AudioSource audioSource;
     [SerializeField] AudioClip[] clips;
-    
 
     [SerializeField] float speed;
 
+    [SerializeField] int damage;
 
     private void Awake()
     {
@@ -44,7 +44,7 @@ public class Bullet : MonoBehaviour
         {
             rigid.linearVelocity = Vector3.zero;
             bulletLight.enabled = false;
-
+            other.GetComponent<Enemy>();
             StartCoroutine(BulletEnemyImpact());
         }
         

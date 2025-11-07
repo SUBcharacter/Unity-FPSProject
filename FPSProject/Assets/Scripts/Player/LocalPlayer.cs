@@ -56,6 +56,7 @@ public class LocalPlayer : MonoBehaviour
 
     [SerializeField] int bulletCount;
     [SerializeField] int fullMagazine;
+    [SerializeField] int health;
 
     [SerializeField] bool isWalk;
     [SerializeField] bool isSprint;
@@ -230,7 +231,13 @@ public class LocalPlayer : MonoBehaviour
 
 
     }
-    #region AnimationEventFunc
+    #region PublicMethod
+
+    public void Hit(int damage)
+    {
+        health -= damage;
+    }
+
     public void Reloading()
     {
         isReload = !isReload;
