@@ -21,9 +21,11 @@ public class Magazine : MonoBehaviour
         }
     }
 
-    public void Fire(Vector3 dir, Vector3 pos)
+    public void Fire(Vector3 dir, Transform pos)
     {
         magazine[index].GetComponent<Bullet>().Init(dir, pos);
         index = (index + 1) % magazineCount;
     }
+
+    
 }

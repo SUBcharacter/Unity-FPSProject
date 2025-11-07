@@ -9,6 +9,7 @@ public class Bullet : MonoBehaviour
     [SerializeField] ParticleSystem bulletHole;
     [SerializeField] AudioSource audioSource;
     [SerializeField] AudioClip[] clips;
+    [SerializeField] Transform fireOrigin;
 
     [SerializeField] float speed;
 
@@ -21,31 +22,41 @@ public class Bullet : MonoBehaviour
         audioSource = GetComponent<AudioSource>();
     }
 
-    public void Init(Vector3 dir, Vector3 pos)
+    public void Init(Vector3 dir, Transform pos)
     {
         bulletLight.enabled = true;
-        transform.position = pos;
+        transform.position = pos.position;
+        fireOrigin = pos;
         rigid.linearVelocity = Vector3.zero;
         gameObject.SetActive(true);
         rigid.AddForce(dir * speed,ForceMode.VelocityChange);
 
     }
 
+    void Stop()
+    {
+        rigid.linearVelocity = Vector3.zero;
+        bulletLight.enabled = false;
+    }
+
     private void OnTriggerEnter(Collider other)
     {
         if ((other.gameObject.layer == LayerMask.NameToLayer("Terrain")) || (other.gameObject.layer == LayerMask.NameToLayer("Enviroment")))
         {
-            rigid.linearVelocity = Vector3.zero;
-            bulletLight.enabled = false;
-
+            Stop();
             StartCoroutine(BulletTerrainImpact());
         }
         else if(other.gameObject.layer == LayerMask.NameToLayer("Enemy"))
         {
-            rigid.linearVelocity = Vector3.zero;
-            bulletLight.enabled = false;
-            other.GetComponent<Enemy>();
+            Stop();
+            other.GetComponent<Enemy>().Hit(damage,fireOrigin);
             StartCoroutine(BulletEnemyImpact());
+        }
+        else if(other.gameObject.layer == LayerMask.NameToLayer("Player"))
+        {
+            Stop();
+            other.GetComponent<LocalPlayer>().Hit(damage);
+            gameObject.SetActive(false);
         }
         
 
@@ -77,4 +88,6 @@ public class Bullet : MonoBehaviour
 
         gameObject.SetActive(false);
     }
+
+    
 }

@@ -289,11 +289,9 @@ public class LocalPlayer : MonoBehaviour
 
         Vector3 dir = (targetPoint - firePoint.position).normalized;
 
-        Vector3 firePos = firePoint.position;
-
         Debug.DrawRay(ray.origin, ray.direction * 100f, Color.red, 1f);
 
-        magazine.Fire(dir, firePos);
+        magazine.Fire(dir, firePoint);
         PlayerShotAudio.PlaySound(shootSound);
 
         StartCoroutine(Recoil());
@@ -370,7 +368,10 @@ public class LocalPlayer : MonoBehaviour
         isGround = Physics.SphereCast(rayOrigin, radius, Vector3.down, out RaycastHit hit, checkDist, mask); 
 
         rigid.useGravity = !isGround;
-        
+        if(isGround == false)
+        {
+            isReload = false;
+        }
         
         Debug.DrawRay(rayOrigin, Vector3.down * checkDist, isGround ? Color.green : Color.red);
     }
