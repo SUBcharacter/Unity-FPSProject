@@ -84,6 +84,7 @@ public class ChaseState : EnemyState
     {
         enemy.animator.SetTrigger("Exposed");
         enemy.animator.SetBool("Detected", true);
+        enemy.actAudio.PlaySound(enemy.alertClip);
         lostTime = 0f;
         lastKnownPos = enemy.target;
     }
@@ -131,18 +132,51 @@ public class ChaseState : EnemyState
 
 public class AttackState : EnemyState
 {
+    float timer;
+    float attackTimer = 3f;
+
     public override void Start(Enemy enemy)
     {
         Debug.Log("АјАн");
+        enemy.animator.SetBool("OnRange", true);
+        enemy.StopMove();
+        timer = 0;
     }
 
     public override void Update(Enemy enemy)
     {
-        
+        if(enemy.target == null)
+        {
+            enemy.ChangeState(enemy.states[0]);
+            return;
+        }
+
+        Vector3 dir = enemy.target.position - enemy.transform.position;
+        dir.y = 0;
+        if (dir.sqrMagnitude > 0.001f)
+        {
+            Quaternion rot = Quaternion.LookRotation(dir);
+            enemy.transform.rotation = rot;
+        }
+
+        float distance = Vector3.Distance(enemy.transform.position, enemy.target.position);
+
+        if(distance > enemy.attackDistance)
+        {
+            enemy.ChangeState(enemy.states[2]);
+            return;
+        }
+        timer -= Time.deltaTime;
+        if(timer <= 0)
+        {
+            timer = attackTimer;
+            enemy.Shoot();
+        }
     }
 
     public override void Exit(Enemy enemy)
     {
-        
+        enemy.StopMove();
+        enemy.animator.SetBool("OnRange", false);
     }
 }

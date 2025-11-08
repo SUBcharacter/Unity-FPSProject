@@ -26,8 +26,11 @@ public class Bullet : MonoBehaviour
     {
         bulletLight.enabled = true;
         transform.position = pos.position;
+        transform.rotation = pos.rotation;
         fireOrigin = pos;
         rigid.linearVelocity = Vector3.zero;
+        MeshRenderer ren = GetComponent<MeshRenderer>();
+        ren.enabled = true;
         gameObject.SetActive(true);
         rigid.AddForce(dir * speed,ForceMode.VelocityChange);
 
@@ -58,6 +61,10 @@ public class Bullet : MonoBehaviour
             other.GetComponent<LocalPlayer>().Hit(damage);
             gameObject.SetActive(false);
         }
+        else if(other.gameObject.layer == LayerMask.NameToLayer("Border"))
+        {
+            gameObject.SetActive(false);
+        }
         
 
     }
@@ -65,6 +72,9 @@ public class Bullet : MonoBehaviour
     IEnumerator BulletTerrainImpact()
     {
         int index = Random.Range(0, 4);
+
+        MeshRenderer ren = GetComponent<MeshRenderer>();
+        ren.enabled = false;
 
         audioSource.clip = clips[index];
         audioSource.Play();

@@ -9,16 +9,31 @@ public class Enemy : MonoBehaviour
     [SerializeField] public Animator animator;
     [SerializeField] public Transform target;
     public List<EnemyState> states;
-
+    [SerializeField] Transform muzzle;
     [SerializeField] NavMeshAgent agent;
     [SerializeField] Detector detector;
     [SerializeField] Image HPBar;
     [SerializeField] Transform patrolTarget;
     [SerializeField] Transform[] patrolPoint;
-    [SerializeField] Magazine mag;
+    [SerializeField] Magazine magazine;
     [SerializeField] ParticleSystem deathParticle;
+    [SerializeField] Medikit medikit;
+    [SerializeField] EnemySpawner spawner;
+    [SerializeField] public EnemyMoveAudio moveAudio;
+    [SerializeField] public EnemyActAudio actAudio;
+    [SerializeField] public EnemyShotAudio shotAudio;
     EnemyState currentState;
     Coroutine slow;
+
+    #region AudioClips
+
+    [SerializeField] public AudioClip moveClip;
+    [SerializeField] public AudioClip alertClip;
+    [SerializeField] public AudioClip attackClip;
+    [SerializeField] public AudioClip deahtClip;
+
+    #endregion
+
 
     [SerializeField] public float attackDistance;
     [SerializeField] float speed;
@@ -34,6 +49,8 @@ public class Enemy : MonoBehaviour
         animator = GetComponentInChildren<Animator>();
         detector = GetComponentInChildren<Detector>();
         agent = GetComponent<NavMeshAgent>();
+        medikit = FindAnyObjectByType<Medikit>();
+        spawner = GetComponentInParent<EnemySpawner>();
         health = maxHealth;
         speed = agent.speed;
         states = new List<EnemyState>();
@@ -41,13 +58,29 @@ public class Enemy : MonoBehaviour
         states.Add(new PatrolState());
         states.Add(new ChaseState());
         states.Add(new AttackState());
-        currentState = states[0];
-        StartCoroutine(DetectEnemy());
     }
 
+    private void Start()
+    {
+        moveAudio.audioSource.clip = moveClip;
+        moveAudio.audioSource.loop = true;
+        moveAudio.audioSource.Play();
+    }
     private void Update()
     {
+        if(!isDead)
         currentState.Update(this);
+    }
+
+    private void LateUpdate()
+    {
+        if(health <= 0)
+        {
+            HPBar.fillAmount = 0;
+            isDead = true;
+        }
+        
+        HPBar.fillAmount = (float)health / (float)maxHealth;
     }
 
     public void ChangeState(EnemyState state)
@@ -57,12 +90,22 @@ public class Enemy : MonoBehaviour
         currentState.Start(this);
     }
 
-    public void Init(Vector3 pos)
+    public void Init(Vector3 pos, Transform[] points, Magazine mag)
     {
+        agent.isStopped = false;
+        Collider coll = GetComponent<Collider>();
+        coll.enabled = true;
+        SkinnedMeshRenderer[] renderers = GetComponentsInChildren<SkinnedMeshRenderer>();
+        foreach (var r in renderers)
+        {
+            r.enabled = true;
+        }
         transform.position = pos;
         isDead = false;
         health = maxHealth;
         ChangeState(states[0]);
+        patrolPoint = points;
+        magazine = mag;
         gameObject.SetActive(true); 
         StartCoroutine(DetectEnemy());
     }
@@ -86,9 +129,17 @@ public class Enemy : MonoBehaviour
         }
     }
 
+    public void Shoot()
+    {
+        animator.SetTrigger("Attack");
+        shotAudio.PlaySound(attackClip);
+        Vector3 dir = target.position - muzzle.position;
+        magazine.Fire(dir, muzzle);
+    }
+
     public bool ArrivedPoint()
     {
-        return !agent.pathPending && agent.remainingDistance <= 0.3f;
+        return !agent.pathPending && agent.remainingDistance <= 1f;
     }
 
     public void StartPatrol()
@@ -103,12 +154,30 @@ public class Enemy : MonoBehaviour
             return;
     }
 
+    void GetMedikit()
+    {
+        float randomValue = Random.Range(0f, 1f);
+        if(randomValue <= 0.7f)
+        {
+            medikit.Get(transform.position);
+        }
+        else
+        {
+            return;
+        }
+        
+    }
     public void MoveOut(Transform target)
     {
         if (target == null)
             return;
 
         agent.SetDestination(target.position);
+    }
+
+    public void StopMove()
+    {
+        agent.isStopped = !agent.isStopped;
     }
 
     Transform GetRandomPatrolPoint()
@@ -143,17 +212,24 @@ public class Enemy : MonoBehaviour
 
     IEnumerator OnDeath()
     {
-        deathParticle.Play();
-        yield return CoroutineCasher.Wait(1f);
-        gameObject.SetActive(false);
-    }
-
-    IEnumerator Shoot()
-    {
-        while(targetAcquired)
+        spawner.OnEnemyDead();
+        agent.isStopped = true;
+        Collider coll = GetComponent<Collider>();
+        coll.enabled = false;
+        SkinnedMeshRenderer[] renderers = GetComponentsInChildren<SkinnedMeshRenderer>();
+        foreach(var r in renderers)
         {
-            yield return CoroutineCasher.Wait(2f);
+            r.enabled = false;
         }
+        deathParticle.Play();
+        deathParticle.gameObject.GetComponent<AudioSource>().Play();
+        moveAudio.audioSource.Stop();
+        moveAudio.audioSource.loop = false;
+        moveAudio.audioSource.clip = deahtClip;
+        moveAudio.audioSource.Play();
+        yield return CoroutineCasher.Wait(1f);
+        GetMedikit();
+        gameObject.SetActive(false);
     }
 
     IEnumerator DamagedColor()

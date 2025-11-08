@@ -25,6 +25,16 @@ public class Arms : MonoBehaviour
         player.Reloading();
     }
 
+    public void ReloadSound1()
+    {
+        PlayerActAudio.PlaySound(player.reloadSound1);
+    }
+
+    public void ReloadSound2()
+    {
+        PlayerActAudio.PlaySound(player.reloadSound2);
+    }
+
     public void MuzzleFlashOn()
     {
         player.MuzzleFlashOn();

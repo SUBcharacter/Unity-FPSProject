@@ -25,13 +25,15 @@ public class LocalPlayer : MonoBehaviour
     [SerializeField] AudioClip walkSound;
     [SerializeField] AudioClip runSound;
     [SerializeField] AudioClip aimingSound;
-    [SerializeField] AudioClip reloadSound1;
-    [SerializeField] AudioClip reloadSound2;
+    [SerializeField] public AudioClip reloadSound1;
+    [SerializeField] public AudioClip reloadSound2;
     [SerializeField] AudioClip holsterIn;
     [SerializeField] AudioClip holsterOut;
     [SerializeField] Image crosshair;
+    [SerializeField] Image HPBar;
     [SerializeField] Text currentMagazine;
     [SerializeField] Text ammoMax;
+    [SerializeField] Text HP;
 
 
     [SerializeField] Vector2 mouseInputVec;
@@ -45,7 +47,7 @@ public class LocalPlayer : MonoBehaviour
     [SerializeField] float walkSpeed;
     [SerializeField] float sprintSpeed;
     [SerializeField] float jumpPower;
-    [SerializeField] float mouseSensitivity;
+    [SerializeField] public float mouseSensitivity;
     [SerializeField] float maxMouseSensitivity;
     [SerializeField] float defaultFov;
     [SerializeField] float aimFov;
@@ -57,6 +59,7 @@ public class LocalPlayer : MonoBehaviour
     [SerializeField] int bulletCount;
     [SerializeField] int fullMagazine;
     [SerializeField] int health;
+    int maxHealth = 100;
 
     [SerializeField] bool isWalk;
     [SerializeField] bool isSprint;
@@ -82,7 +85,7 @@ public class LocalPlayer : MonoBehaviour
         isGround = false;
         isCrouching = false;
         isFiring = false;
-
+        health = maxHealth;
         currentMagazine.text = bulletCount.ToString();
         ammoMax.text = (fullMagazine + 1).ToString();
     }
@@ -98,6 +101,8 @@ public class LocalPlayer : MonoBehaviour
     {
         VelocityY = rigid.linearVelocity.y;
         currentMagazine.text = bulletCount.ToString();
+        HP.text = health.ToString();
+        HPBar.fillAmount = (float)health / (float)maxHealth;
         RecoilRecovery();
         AnimationControler();
         MoveSoundControler();
@@ -307,6 +312,20 @@ public class LocalPlayer : MonoBehaviour
         PlayerActAudio.PlaySound(holsterOut);
     }
 
+    public void Heal(int healing)
+    {
+        health += healing;
+        if(health >= maxHealth)
+        {
+            health = maxHealth;
+        }
+    }
+
+    public void SetSensitivity(float value)
+    {
+        mouseSensitivity = value;
+    }
+
     #endregion
     void Move()
     {
@@ -363,9 +382,10 @@ public class LocalPlayer : MonoBehaviour
         float radius = coll.radius * 0.9f;
         float checkDist = 0.25f;
         Vector3 rayOrigin = transform.position + Vector3.down * (coll.height / 2f - coll.radius + 0.01f);
-        int mask = LayerMask.GetMask("Terrain");
+        int mask1 = LayerMask.GetMask("Terrain");
+        int mask2 = LayerMask.GetMask("Enviroment");
 
-        isGround = Physics.SphereCast(rayOrigin, radius, Vector3.down, out RaycastHit hit, checkDist, mask); 
+        isGround = Physics.SphereCast(rayOrigin, radius, Vector3.down, out RaycastHit hit, checkDist, mask1) || Physics.SphereCast(rayOrigin, radius, Vector3.down, out RaycastHit hit1, checkDist, mask1); 
 
         rigid.useGravity = !isGround;
         if(isGround == false)
@@ -399,13 +419,18 @@ public class LocalPlayer : MonoBehaviour
 
     public void OnLook(InputAction.CallbackContext context)
     {
+        if (PauseManager.IsPaused)
+            return;
+
         mouseInputVec = context.ReadValue<Vector2>();
         
     }
 
     public void OnMove(InputAction.CallbackContext context)
     {
-        if(context.performed)
+        if (PauseManager.IsPaused)
+            return;
+        if (context.performed)
         {
             moveInputVec = context.ReadValue<Vector2>();
             isWalk = true;
@@ -420,7 +445,9 @@ public class LocalPlayer : MonoBehaviour
     
     public void OnSprint(InputAction.CallbackContext context)
     {
-        if(context.performed)
+        if (PauseManager.IsPaused)
+            return;
+        if (context.performed)
         {
             isSprint = true;
             isCrouching = false;
@@ -434,7 +461,9 @@ public class LocalPlayer : MonoBehaviour
 
     public void OnFire(InputAction.CallbackContext context)
     {
-        if(context.performed)
+        if (PauseManager.IsPaused)
+            return;
+        if (context.performed)
         {
             if (bulletCount <= 0)
                 return;
@@ -450,7 +479,9 @@ public class LocalPlayer : MonoBehaviour
 
     public void OnZoom(InputAction.CallbackContext context)
     {
-        if(context.performed)
+        if (PauseManager.IsPaused)
+            return;
+        if (context.performed)
         {
             aiming = true;
             PlayerActAudio.PlaySound(aimingSound);
@@ -464,19 +495,21 @@ public class LocalPlayer : MonoBehaviour
 
     public void OnReload(InputAction.CallbackContext context)
     {
+        if (PauseManager.IsPaused)
+            return;
         if (!context.performed || aiming || isReload)
             return;
 
+        if (bulletCount >= fullMagazine)
+            return;
 
         if(bulletCount <= 0)
         {
             animators[0].SetTrigger("ReloadEmpty");
-            PlayerActAudio.PlaySound(reloadSound2);
         }
         else
         {
             animators[0].SetTrigger("ReloadLeft");
-            PlayerActAudio.PlaySound(reloadSound1);
         }
         
         animators[1].SetTrigger("Reload");
@@ -485,6 +518,8 @@ public class LocalPlayer : MonoBehaviour
 
     public void OnJump(InputAction.CallbackContext context)
     {
+        if (PauseManager.IsPaused)
+            return;
         if (context.performed && isGround)
         {
             if(isCrouching)
@@ -504,7 +539,9 @@ public class LocalPlayer : MonoBehaviour
 
     public void OnCrouch(InputAction.CallbackContext context)
     {
-        if(context.performed)
+        if (PauseManager.IsPaused)
+            return;
+        if (context.performed)
         {
             isCrouching = !isCrouching; 
             if(isCrouching)
