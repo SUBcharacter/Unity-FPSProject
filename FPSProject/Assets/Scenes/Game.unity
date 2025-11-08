@@ -40875,6 +40875,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Enemy_Turret
       objectReference: {fileID: 0}
+    - target: {fileID: 2015434656898269652, guid: e29d43f43cc5d82499dd9926e01847d3, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 2015434656898269656, guid: e29d43f43cc5d82499dd9926e01847d3, type: 3}
       propertyPath: m_LocalScale.x
       value: 12.46
@@ -77738,7 +77742,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!114 &2095449013
 MonoBehaviour:
   m_ObjectHideFlags: 0
