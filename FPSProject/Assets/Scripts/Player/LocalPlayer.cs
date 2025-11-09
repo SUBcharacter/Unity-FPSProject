@@ -60,7 +60,8 @@ public class LocalPlayer : MonoBehaviour
     [SerializeField] int fullMagazine;
     [SerializeField] int health;
     int maxHealth = 100;
-
+    
+    [SerializeField] public bool isDead;
     [SerializeField] bool isWalk;
     [SerializeField] bool isSprint;
     [SerializeField] bool isReload;
@@ -78,6 +79,7 @@ public class LocalPlayer : MonoBehaviour
         defaultFov = fov.Lens.FieldOfView;
         aimFov = fov.Lens.FieldOfView - 20;
 
+        isDead = false;
         isWalk = false;
         isSprint = false;
         isReload = false;
@@ -99,10 +101,11 @@ public class LocalPlayer : MonoBehaviour
    
     void Update()
     {
+        if (isDead)
+            return;
         VelocityY = rigid.linearVelocity.y;
         currentMagazine.text = bulletCount.ToString();
-        HP.text = health.ToString();
-        HPBar.fillAmount = (float)health / (float)maxHealth;
+        HPCheck();
         RecoilRecovery();
         AnimationControler();
         MoveSoundControler();
@@ -110,10 +113,25 @@ public class LocalPlayer : MonoBehaviour
 
     private void FixedUpdate()
     {
+        if (isDead)
+            return;
+
         View();
         Move();
         Crouching();
         GroundCheck();
+    }
+
+    void HPCheck()
+    {
+        if(health <= 0)
+        {
+            health = 0;
+            isDead = true;
+        }
+        
+        HP.text = health.ToString();
+        HPBar.fillAmount = (float)health / (float)maxHealth;
     }
 
     void AnimationControler()
@@ -385,7 +403,7 @@ public class LocalPlayer : MonoBehaviour
         int mask1 = LayerMask.GetMask("Terrain");
         int mask2 = LayerMask.GetMask("Enviroment");
 
-        isGround = Physics.SphereCast(rayOrigin, radius, Vector3.down, out RaycastHit hit, checkDist, mask1) || Physics.SphereCast(rayOrigin, radius, Vector3.down, out RaycastHit hit1, checkDist, mask1); 
+        isGround = Physics.SphereCast(rayOrigin, radius, Vector3.down, out RaycastHit hit, checkDist, mask1) || Physics.SphereCast(rayOrigin, radius, Vector3.down, out RaycastHit hit1, checkDist, mask2); 
 
         rigid.useGravity = !isGround;
         if(isGround == false)
@@ -419,7 +437,7 @@ public class LocalPlayer : MonoBehaviour
 
     public void OnLook(InputAction.CallbackContext context)
     {
-        if (PauseManager.IsPaused)
+        if (PauseManager.IsPaused || GameManager.instance.stopInput)
             return;
 
         mouseInputVec = context.ReadValue<Vector2>();
@@ -428,7 +446,7 @@ public class LocalPlayer : MonoBehaviour
 
     public void OnMove(InputAction.CallbackContext context)
     {
-        if (PauseManager.IsPaused)
+        if (PauseManager.IsPaused || GameManager.instance.stopInput)
             return;
         if (context.performed)
         {
@@ -445,7 +463,7 @@ public class LocalPlayer : MonoBehaviour
     
     public void OnSprint(InputAction.CallbackContext context)
     {
-        if (PauseManager.IsPaused)
+        if (PauseManager.IsPaused || GameManager.instance.stopInput)
             return;
         if (context.performed)
         {
@@ -461,7 +479,7 @@ public class LocalPlayer : MonoBehaviour
 
     public void OnFire(InputAction.CallbackContext context)
     {
-        if (PauseManager.IsPaused)
+        if (PauseManager.IsPaused || GameManager.instance.stopInput)
             return;
         if (context.performed)
         {
@@ -479,7 +497,7 @@ public class LocalPlayer : MonoBehaviour
 
     public void OnZoom(InputAction.CallbackContext context)
     {
-        if (PauseManager.IsPaused)
+        if (PauseManager.IsPaused || GameManager.instance.stopInput)
             return;
         if (context.performed)
         {
@@ -495,7 +513,7 @@ public class LocalPlayer : MonoBehaviour
 
     public void OnReload(InputAction.CallbackContext context)
     {
-        if (PauseManager.IsPaused)
+        if (PauseManager.IsPaused || GameManager.instance.stopInput)
             return;
         if (!context.performed || aiming || isReload)
             return;
@@ -518,7 +536,7 @@ public class LocalPlayer : MonoBehaviour
 
     public void OnJump(InputAction.CallbackContext context)
     {
-        if (PauseManager.IsPaused)
+        if (PauseManager.IsPaused || GameManager.instance.stopInput)
             return;
         if (context.performed && isGround)
         {
@@ -539,7 +557,7 @@ public class LocalPlayer : MonoBehaviour
 
     public void OnCrouch(InputAction.CallbackContext context)
     {
-        if (PauseManager.IsPaused)
+        if (PauseManager.IsPaused || GameManager.instance.stopInput)
             return;
         if (context.performed)
         {

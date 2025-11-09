@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.Rendering;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
@@ -9,12 +10,13 @@ public class PauseManager : MonoBehaviour
     [SerializeField] Text sensitivityText;
     [SerializeField] LocalPlayer player;
 
-    public static bool IsPaused { get; private set; }
+    public static bool IsPaused { get; set; }
 
     bool isPaused = false;
 
     private void Awake()
     {
+        Time.timeScale = 1f;
         pauseScreen.SetActive(false);
         sensitivity.onValueChanged.AddListener(SenseChange);
         sensitivity.value = player.mouseSensitivity;
@@ -23,6 +25,9 @@ public class PauseManager : MonoBehaviour
 
     private void Update()
     {
+        if (GameManager.instance.stopInput)
+            return;
+
         if(Input.GetKeyDown(KeyCode.Tab))
         {
             if (isPaused)
@@ -59,6 +64,12 @@ public class PauseManager : MonoBehaviour
         isPaused = false;
         IsPaused = isPaused;
         SceneManager.LoadScene("Title");
+    }
+
+    public void Retry()
+    {
+        Time.timeScale = 1f;
+        SceneManager.LoadScene("Game");
     }
 
     public void SenseChange(float value)

@@ -4,17 +4,19 @@ using UnityEngine.UI;
 
 public class EnemyManager : MonoBehaviour
 {
-    [SerializeField] GameObject barricade;
     [SerializeField] EnemySpawner[] spawners;
-    [SerializeField] GameObject subject;
+    [SerializeField] GameObject objective1;
+    [SerializeField] GameObject Objective2;
     [SerializeField] Text enemyCount;
 
     [SerializeField] int allActiveEnemy;
 
+    [SerializeField] public bool isCleared;
+
     private void Awake()
     {
-        barricade.SetActive(true);
         spawners = GetComponentsInChildren<EnemySpawner>();
+        isCleared = false;
     }
 
     private void Start()
@@ -27,23 +29,25 @@ public class EnemyManager : MonoBehaviour
     private void Update()
     {
         AliveEnemyCount();
-        if(AllEnemiesCleared())
+        AllEnemiesCleared();
+        if(isCleared)
         {
-            barricade.SetActive(false);
-            subject.SetActive(false);
+            objective1.SetActive(false);
+            Objective2.SetActive(true);
         }
     }
 
-    bool AllEnemiesCleared()
+    void AllEnemiesCleared()
     {
         foreach(var spawner in spawners)
         {
             if(spawner.activeEnemyCount > 0)
             {
-                return false;
+                isCleared = false;
+                return;
             }
         }
-        return true;
+        isCleared = true;
     }
 
     void AliveEnemyCount()

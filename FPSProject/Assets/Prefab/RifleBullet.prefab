@@ -5359,6 +5359,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f79f3c59e675fe342832c7a0101918d9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  coll: {fileID: 0}
   rigid: {fileID: 0}
   bulletLight: {fileID: 0}
   bulletSpark: {fileID: 6662380321379860782}
@@ -5370,7 +5371,10 @@ MonoBehaviour:
   - {fileID: 8300000, guid: 091908a06d0b56143aaf6d3913444ab7, type: 3}
   - {fileID: 8300000, guid: fd208dd7a0eafc84f82ad5fde72ab8fc, type: 3}
   fireOrigin: {fileID: 0}
-  speed: 100
+  originMask:
+    serializedVersion: 2
+    m_Bits: 32768
+  speed: 300
   damage: 10
 --- !u!1 &6643426474232734903
 GameObject:
