@@ -20,7 +20,7 @@ public class LocalPlayer : MonoBehaviour
     [SerializeField] Rigidbody rigid;
     [SerializeField] Transform vertical;
     [SerializeField] Animator[] animators;
-    [SerializeField] Magazine magazine;
+    [SerializeField] public Magazine magazine;
     [SerializeField] AudioClip shootSound;
     [SerializeField] AudioClip walkSound;
     [SerializeField] AudioClip runSound;
@@ -102,7 +102,13 @@ public class LocalPlayer : MonoBehaviour
     void Update()
     {
         if (isDead)
+        {
+            PlayerActAudio.audioSource.Stop();
+            PlayerMoveAudio.audioSource.Stop();
+            PlayerShotAudio.audioSource.Stop();
             return;
+        }
+            
         VelocityY = rigid.linearVelocity.y;
         currentMagazine.text = bulletCount.ToString();
         HPCheck();
@@ -520,6 +526,7 @@ public class LocalPlayer : MonoBehaviour
 
         if (bulletCount >= fullMagazine)
             return;
+
 
         if(bulletCount <= 0)
         {

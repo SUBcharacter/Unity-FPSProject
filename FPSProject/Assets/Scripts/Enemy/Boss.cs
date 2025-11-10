@@ -18,9 +18,11 @@ public class Boss : MonoBehaviour
     [SerializeField] ParticleSystem deathParticle;
     [SerializeField] public AudioSource actAudio;
     [SerializeField] public AudioSource shotAudio;
+    [SerializeField] public AudioSource BGMAudio;
     [SerializeField] AudioClip shootClip;
     [SerializeField] AudioClip deathClip;
     [SerializeField] AudioClip shieldActive;
+    [SerializeField] public AudioClip BGMClip;
     Coroutine engageRoutine;
 
     public List<BossState> states;

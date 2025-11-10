@@ -5062,7 +5062,7 @@ MonoBehaviour:
   healAmount: 3
   ren: {fileID: 3358095690530588015}
   audioSource: {fileID: 0}
-  clip: {fileID: 8300000, guid: 8dfdbc346713580429db9079ad1ff964, type: 3}
+  clip: {fileID: 8300000, guid: bbcf8c19d769c0440b8e41ccacc38f6e, type: 3}
   time: 0
   lifeTime: 8
 --- !u!1 &1901310734172559725

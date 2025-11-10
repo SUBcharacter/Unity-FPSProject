@@ -35,6 +35,10 @@ public class Arms : MonoBehaviour
         PlayerActAudio.PlaySound(player.reloadSound2);
     }
 
+    public void ReturnAllBullet()
+    {
+        player.magazine.ReturnAllBullet();
+    }
     public void MuzzleFlashOn()
     {
         player.MuzzleFlashOn();

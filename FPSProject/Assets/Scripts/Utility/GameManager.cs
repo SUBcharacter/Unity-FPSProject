@@ -2,6 +2,8 @@ using UnityEngine;
 
 public class GameManager : MonoBehaviour
 {
+    [SerializeField] AudioSource BGMAudio;
+    [SerializeField] AudioClip BGM1Clip;
     [SerializeField] GameObject barricade;
     [SerializeField] BossManager bossManager;
     [SerializeField] EnemyManager enemyManager;
@@ -17,12 +19,17 @@ public class GameManager : MonoBehaviour
     {
         instance = this;
         stopInput = false;
+        BGMAudio.clip = BGM1Clip;
+        BGMAudio.loop = true;
+        BGMAudio.Play();
     }
 
     private void Update()
     {
         if(player.isDead)
         {
+            EnemySoundStop();
+            BGMAudio.Stop();
             Time.timeScale = 0f;
             stopInput = true;
             Cursor.lockState = CursorLockMode.None;
@@ -32,6 +39,8 @@ public class GameManager : MonoBehaviour
 
         if (bossManager.isCleared)
         {
+            EnemySoundStop();
+            BGMAudio.Stop();
             Time.timeScale = 0f;
             stopInput = true;
             Cursor.lockState = CursorLockMode.None;
@@ -50,6 +59,25 @@ public class GameManager : MonoBehaviour
             {
                 barricade.SetActive(true);
             }
+        }
+    }
+
+    void EnemySoundStop()
+    {
+        Enemy[] enemies = FindObjectsByType<Enemy>(FindObjectsSortMode.None);
+        Minion[] minions = FindObjectsByType<Minion>(FindObjectsSortMode.None);
+
+        foreach(var e in enemies)
+        {
+            e.actAudio.audioSource.Stop();
+            e.moveAudio.audioSource.Stop();
+            e.shotAudio.audioSource.Stop();
+        }
+        foreach(var m in minions)
+        {
+            m.actAudio.audioSource.Stop();
+            m.moveAudio.audioSource.Stop();
+            m.shotAudio.audioSource.Stop();
         }
     }
 }

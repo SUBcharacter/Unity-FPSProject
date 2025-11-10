@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Diagnostics;
 using UnityEngine;
 
 public abstract class BossState
@@ -32,7 +33,9 @@ public class StandByState : BossState
 
     public override void Exit(Boss boss)
     {
-
+        boss.BGMAudio.Stop();
+        boss.BGMAudio.clip = boss.BGMClip;
+        boss.BGMAudio.Play();
     }
 }
     

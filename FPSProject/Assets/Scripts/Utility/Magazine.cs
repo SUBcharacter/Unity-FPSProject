@@ -27,5 +27,14 @@ public class Magazine : MonoBehaviour
         index = (index + 1) % magazineCount;
     }
 
-    
+    public void ReturnAllBullet()
+    {
+        foreach(var b in magazine)
+        {
+            if(b.activeSelf)
+            {
+                b.SetActive(false);
+            }
+        }
+    }
 }
