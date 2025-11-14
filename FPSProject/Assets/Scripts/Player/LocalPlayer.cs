@@ -9,6 +9,7 @@ using UnityEngine.UI;
 public class LocalPlayer : MonoBehaviour
 {
     // ¾ÉÀ» ½Ã body YÁÂÇ¥ -0.5
+    [SerializeField] Transform warfPoint;
     [SerializeField] Transform body;
     [SerializeField] Transform playerCamera;
     [SerializeField] Transform firePoint;
@@ -107,6 +108,11 @@ public class LocalPlayer : MonoBehaviour
             PlayerMoveAudio.audioSource.Stop();
             PlayerShotAudio.audioSource.Stop();
             return;
+        }
+
+        if(Input.GetKeyDown(KeyCode.F1))
+        {
+            transform.position = warfPoint.position;
         }
             
         VelocityY = rigid.linearVelocity.y;

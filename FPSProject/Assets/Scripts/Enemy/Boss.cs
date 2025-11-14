@@ -16,8 +16,7 @@ public class Boss : MonoBehaviour
     [SerializeField] public Animator animator;
     [SerializeField] public BossSpawner minions;
     [SerializeField] ParticleSystem deathParticle;
-    [SerializeField] public AudioSource actAudio;
-    [SerializeField] public AudioSource shotAudio;
+    [SerializeField] public AudioSource bossAudio;
     [SerializeField] public AudioSource BGMAudio;
     [SerializeField] AudioClip shootClip;
     [SerializeField] AudioClip deathClip;
@@ -37,6 +36,7 @@ public class Boss : MonoBehaviour
     private void Awake()
     {
         animator = GetComponentInChildren<Animator>();
+        bossAudio = GetComponent<AudioSource>();
         health = maxHealth;
         isDead = false;
         states = new List<BossState>();
@@ -44,7 +44,7 @@ public class Boss : MonoBehaviour
         states.Add(new DeactivateState());
         states.Add(new ActivateState());
         states.Add(new DestroyState());
-        actAudio.spatialBlend = 1;
+        bossAudio.spatialBlend = 1;
         ChangeState(states[0]);
     }
 
@@ -103,8 +103,7 @@ public class Boss : MonoBehaviour
 
     void Shoot()
     {
-        shotAudio.clip = shootClip;
-        shotAudio.Play();
+        bossAudio.PlayOneShot(shootClip);
         Vector3 dir = (target.position - muzzle.position).normalized;
         bossMag.Fire(dir, muzzle);
     }
@@ -125,8 +124,7 @@ public class Boss : MonoBehaviour
 
     public void ShieldActive(bool value)
     {
-        actAudio.clip = shieldActive;
-        actAudio.Play();
+        bossAudio.PlayOneShot(shieldActive);
         shield.SetActive(value);
     }
 
@@ -229,9 +227,7 @@ public class Boss : MonoBehaviour
             r.enabled = false;
         }
         deathParticle.gameObject.SetActive(true);
-        deathParticle.gameObject.GetComponent<AudioSource>().Play();
-        actAudio.clip = deathClip;
-        actAudio.Play();
+        bossAudio.PlayOneShot(deathClip);
 
         yield return CoroutineCasher.Wait(2f);
 

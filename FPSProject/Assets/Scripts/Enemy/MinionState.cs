@@ -84,7 +84,7 @@ public class PersuingState : MinionState
     {
         enemy.animator.SetTrigger("Exposed");
         enemy.animator.SetBool("Detected", true);
-        enemy.actAudio.PlaySound(enemy.alertClip);
+        enemy.moveAudio.PlayOneShot(enemy.alertClip);
         lostTime = 0f;
         lastKnownPos = enemy.target;
     }

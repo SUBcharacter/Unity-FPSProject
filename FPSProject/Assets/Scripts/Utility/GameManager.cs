@@ -75,9 +75,7 @@ public class GameManager : MonoBehaviour
         }
         foreach(var m in minions)
         {
-            m.actAudio.audioSource.Stop();
-            m.moveAudio.audioSource.Stop();
-            m.shotAudio.audioSource.Stop();
+            m.moveAudio.Stop();
         }
     }
 }

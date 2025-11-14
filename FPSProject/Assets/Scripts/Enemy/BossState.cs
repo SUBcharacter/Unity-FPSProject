@@ -43,7 +43,7 @@ public class DeactivateState : BossState
 {
     public override void Start(Boss boss)
     {
-        boss.actAudio.spatialBlend = 0;
+        boss.bossAudio.spatialBlend = 0;
         boss.ShieldActive(true);
         boss.minions.WaveStart();
     }
