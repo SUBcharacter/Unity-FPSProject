@@ -19,7 +19,9 @@ public class Minion : MonoBehaviour
     [SerializeField] ParticleSystem deathParticle;
     [SerializeField] Medikit medikit;
     [SerializeField] BossSpawner spawner;
-    [SerializeField] public AudioSource moveAudio;
+    [SerializeField] public EnemyMoveAudio moveAudio;
+    [SerializeField] public EnemyActAudio actAudio;
+    [SerializeField] public EnemyShotAudio shotAudio;
     [SerializeField] MinionState currentState;
     Coroutine slow;
 
@@ -49,7 +51,6 @@ public class Minion : MonoBehaviour
         agent = GetComponent<NavMeshAgent>();
         medikit = FindAnyObjectByType<Medikit>();
         spawner = GetComponentInParent<BossSpawner>();
-        moveAudio = GetComponent<AudioSource>();
         health = maxHealth;
         speed = agent.speed;
         states = new List<MinionState>();
@@ -62,9 +63,9 @@ public class Minion : MonoBehaviour
 
     private void Start()
     {
-        moveAudio.clip = moveClip;
-        moveAudio.loop = true;
-        moveAudio.Play();
+        moveAudio.audioSource.clip = moveClip;
+        moveAudio.audioSource.loop = true;
+        moveAudio.audioSource.Play();
     }
     private void Update()
     {
@@ -105,8 +106,8 @@ public class Minion : MonoBehaviour
             r.enabled = true;
         }
         gameObject.SetActive(true);
-        moveAudio.clip = moveClip;
-        moveAudio.Play();
+        moveAudio.audioSource.clip = moveClip;
+        moveAudio.audioSource.Play();
         agent.enabled = true;
         agent.isStopped = false;
         agent.ResetPath();
@@ -138,7 +139,7 @@ public class Minion : MonoBehaviour
     public void Shoot()
     {
         animator.SetTrigger("Attack");
-        moveAudio.PlayOneShot(attackClip);
+        shotAudio.PlaySound(attackClip);
         Vector3 dir = target.position - muzzle.position;
         magazine.Fire(dir, muzzle);
     }
@@ -228,8 +229,8 @@ public class Minion : MonoBehaviour
             r.enabled = false;
         }
         deathParticle.Play();
-        moveAudio.Stop();
-        moveAudio.PlayOneShot(deahtClip);
+        moveAudio.audioSource.Stop();
+        moveAudio.audioSource.PlayOneShot(deahtClip);
         yield return CoroutineCasher.Wait(1f);
         GetMedikit();
         gameObject.SetActive(false);

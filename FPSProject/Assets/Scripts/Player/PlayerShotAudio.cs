@@ -11,7 +11,6 @@ public class PlayerShotAudio : MonoBehaviour
 
     public static void PlaySound(AudioClip clip)
     {
-        audioSource.clip = clip;
-        audioSource.Play();
+        audioSource.PlayOneShot(clip);
     }
 }

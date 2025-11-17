@@ -11,7 +11,6 @@ public class EnemyShotAudio : MonoBehaviour
 
     public void PlaySound(AudioClip clip)
     {
-        audioSource.clip = clip;
-        audioSource.Play();
+        audioSource.PlayOneShot(clip);
     }
 }
